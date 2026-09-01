@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Hub</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1B2528">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1B2528;
+    --surface: #22302F;
+    --surface-raised: #2A3B39;
+    --line: #3A4C49;
+    --text: #EDEAE2;
+    --text-muted: #93A6A2;
+    --gold: #C9A15C;
+    --sage: #7FA98D;
+    --sage-dim: #5C8271;
+    --amber: #C9924C;
+    --hub: #8CA3C9;
+    --hub-dim: #5F7996;
+    --danger: #C97A5C;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; height:100%;}
+  body{
+    background: radial-gradient(ellipse at 50% -10%, #26332F 0%, var(--bg) 55%);
+    color: var(--text); font-family:'Inter', system-ui, sans-serif;
+    min-height:100vh; padding: 20px 16px 40px; max-width:480px; margin:0 auto;
+  }
+  .eyebrow{ font-family:'Space Mono', monospace; font-size:11px; color: var(--text-muted); letter-spacing:0.14em; text-transform:uppercase; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; margin:6px 0 2px; letter-spacing:-0.01em; }
+  .sub{ font-size:13px; color: var(--text-muted); margin-bottom:20px; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px; }
+  .stat-card{ background: var(--surface); border-left:3px solid var(--line); border-radius:10px; padding:12px 10px; }
+  .stat-card.pause{ border-left-color: var(--sage); }
+  .stat-card.keep{ border-left-color: var(--gold); }
+  .stat-card.record{ border-left-color: var(--amber); }
+  .stat-value{ font-family:'Fraunces', serif; font-size:22px; }
+  .stat-label{ font-size:11px; color: var(--text-muted); line-height:1.35; margin-top:2px; }
+  .stat-app{ font-family:'Space Mono', monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-top:6px; }
+  .stat-card.pause .stat-app{ color: var(--sage); }
+  .stat-card.keep .stat-app{ color: var(--gold); }
+  .stat-card.record .stat-app{ color: var(--amber); }
+  .summary-box{ background: var(--surface-raised); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:22px; font-size:13.5px; line-height:1.65; color: var(--text); }
+  .summary-box .flag{ color: var(--danger); }
+  .section-label{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color: var(--text-muted); margin: 0 0 10px; }
+  .link-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:22px; }
+  .link-row{ display:flex; justify-content:space-between; align-items:center; background: var(--surface); border-radius:10px; padding:14px 16px; text-decoration:none; color: var(--text); font-size:14.5px; border:1px solid transparent; }
+  .link-row:active{ border-color: var(--line); }
+  .link-row .arrow{ font-family:'Space Mono', monospace; }
+  .link-row.pause .arrow{ color: var(--sage); }
+  .link-row.keep .arrow{ color: var(--gold); }
+  .link-row.record .arrow{ color: var(--amber); }
+  .action-box{ background: var(--surface-raised); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:16px; }
+  .btn{ width:100%; padding:12px 16px; border-radius:10px; border:1px solid var(--line); background: transparent; color: var(--text); font-family:'Inter', sans-serif; font-size:14px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; }
+  .btn + .btn{ margin-top:8px; }
+  .btn.primary{ background: var(--hub-dim); border-color: var(--hub); color: #0F171F; }
+  .btn:active{ opacity:0.85; }
+  .hidden{ display:none !important; }
+  .about-link{ text-align:center; font-family:'Space Mono', monospace; font-size:11px; color: var(--text-muted); text-decoration:underline; display:block; margin-top:10px; background:none; border:none; width:100%; padding:6px; cursor:pointer; }
+  .modal-overlay{ position:fixed; inset:0; background:rgba(10,14,13,0.72); display:flex; align-items:flex-end; justify-content:center; z-index:20; }
+  .modal{ background: var(--surface-raised); border-radius:16px 16px 0 0; padding:22px 20px 28px; max-width:480px; width:100%; max-height:80vh; overflow-y:auto; }
+  .modal p{ font-size:13.5px; line-height:1.65; color: var(--text); }
+  .modal h2{ font-family:'Fraunces', serif; font-size:19px; margin:0 0 12px; }
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background: var(--surface-raised); border:1px solid var(--line); color:var(--text); font-size:13px; padding:10px 18px; border-radius:999px; z-index:30; }
+</style>
+</head>
+<body>
+
+  <div class="eyebrow" id="date-range">This week</div>
+  <h1>The Hub</h1>
+  <div class="sub">A shared view across The Pause, The Keep, and The Record.</div>
+
+  <div class="stat-grid">
+    <div class="stat-card pause">
+      <div class="stat-value" id="pause-count">0</div>
+      <div class="stat-label">caught internally</div>
+      <div class="stat-app">The Pause</div>
+    </div>
+    <div class="stat-card keep">
+      <div class="stat-value" id="keep-count">0</div>
+      <div class="stat-label">moments kept</div>
+      <div class="stat-app">The Keep</div>
+    </div>
+    <div class="stat-card record">
+      <div class="stat-value" id="record-count">0</div>
+      <div class="stat-label">proud of</div>
+      <div class="stat-app">The Record</div>
+    </div>
+  </div>
+
+  <div class="summary-box" id="summary-line">Loading...</div>
+
+  <div class="section-label">Open</div>
+  <div class="link-list">
+    <a class="link-row pause" href="https://stuttlebuns.github.io/the-pause/">
+      <span>The Pause</span><span class="arrow">&rarr;</span>
+    </a>
+    <a class="link-row keep" href="https://stuttlebuns.github.io/the-keep/">
+      <span>The Keep</span><span class="arrow">&rarr;</span>
+    </a>
+    <a class="link-row record" href="https://stuttlebuns.github.io/the-record/">
+      <span>The Record</span><span class="arrow">&rarr;</span>
+    </a>
+  </div>
+
+  <div class="section-label">Backup</div>
+  <div class="action-box">
+    <button class="btn primary" id="download-all">Download full backup</button>
+    <button class="btn" id="restore-all">Restore from full backup</button>
+    <input type="file" id="restore-file" accept="application/json" class="hidden">
+  </div>
+
+  <button class="about-link" id="about-btn">About The Hub</button>
+
+  <div class="modal-overlay hidden" id="about-modal">
+    <div class="modal">
+      <h2>About The Hub</h2>
+      <p>The Hub doesn't store anything of its own. It reads directly from The Pause, The Keep, and The Record's data on this device &mdash; all three apps share the same origin, so this page can see their entries without any syncing or server in between.</p>
+      <p>The weekly numbers here are just counts, nothing interpreted. Nothing leaves this device unless you tap a backup or share button yourself.</p>
+      <p>The full backup bundles all three apps' data into one file. Restoring it writes each app's data back to where it belongs &mdash; The Pause's entries go to The Pause, and so on. It's all-or-nothing per app, same as restoring within each app individually.</p>
+      <button class="btn" id="close-about" style="margin-top:8px;">Close</button>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+
+<script>
+function getPause(){ try{ return JSON.parse(localStorage.getItem('spiral-entries') || '[]'); } catch(e){ return []; } }
+function getKeep(){ try{ return JSON.parse(localStorage.getItem('keep-entries') || '[]'); } catch(e){ return []; } }
+function getKeepTags(){ try{ return JSON.parse(localStorage.getItem('keep-custom-tags') || '[]'); } catch(e){ return []; } }
+function getRecord(){ try{ return JSON.parse(localStorage.getItem('record_entries') || '[]'); } catch(e){ return []; } }
+function getRecordTags(){ try{ return JSON.parse(localStorage.getItem('record_custom_tags') || '[]'); } catch(e){ return []; } }
+
+function withinWeek(dateStr){
+  const d = new Date(dateStr);
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  return d >= weekAgo;
+}
+
+function render(){
+  const pause = getPause().filter(e => withinWeek(e.date));
+  const keep = getKeep().filter(e => withinWeek(e.date));
+  const record = getRecord().filter(e => withinWeek(e.date));
+
+  const caught = pause.filter(e => e.outcome === 'caught').length;
+  const reached = pause.filter(e => e.outcome === 'reached').length;
+
+  document.getElementById('pause-count').textContent = caught;
+  document.getElementById('keep-count').textContent = keep.length;
+  document.getElementById('record-count').textContent = record.length;
+
+  const today = new Date();
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const fmt = d => d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+  document.getElementById('date-range').textContent = `${fmt(weekAgo)} \u2013 ${fmt(today)}`;
+
+  let summary = `${pause.length} pause ${pause.length === 1 ? 'entry' : 'entries'} this week`;
+  summary += ` (${caught} caught internally`;
+  summary += reached > 0 ? `, ${reached} acted on it). ` : `). `;
+  summary += `${keep.length} keep, ${record.length} record.`;
+  const box = document.getElementById('summary-line');
+  box.innerHTML = reached > 0
+    ? summary.replace(`${reached} acted on it`, `<span class="flag">${reached} acted on it</span>`)
+    : summary;
+}
+render();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), 2200);
+}
+
+document.getElementById('download-all').addEventListener('click', () => {
+  const data = {
+    pause: { entries: getPause(), exportedAt: new Date().toISOString() },
+    keep: { entries: getKeep(), customTags: getKeepTags(), exportedAt: new Date().toISOString() },
+    record: { entries: getRecord(), customTags: getRecordTags(), exportedAt: new Date().toISOString() },
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `the-hub-full-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('restore-all').addEventListener('click', () => {
+  document.getElementById('restore-file').click();
+});
+
+document.getElementById('restore-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      let restored = [];
+      if(data.pause && Array.isArray(data.pause.entries)){
+        localStorage.setItem('spiral-entries', JSON.stringify(data.pause.entries));
+        restored.push('Pause');
+      }
+      if(data.keep && Array.isArray(data.keep.entries)){
+        localStorage.setItem('keep-entries', JSON.stringify(data.keep.entries));
+        if(Array.isArray(data.keep.customTags)) localStorage.setItem('keep-custom-tags', JSON.stringify(data.keep.customTags));
+        restored.push('Keep');
+      }
+      if(data.record && Array.isArray(data.record.entries)){
+        localStorage.setItem('record_entries', JSON.stringify(data.record.entries));
+        if(Array.isArray(data.record.customTags)) localStorage.setItem('record_custom_tags', JSON.stringify(data.record.customTags));
+        restored.push('Record');
+      }
+      if(restored.length === 0){
+        showToast('That file didn\'t match the full backup format.');
+        return;
+      }
+      render();
+      showToast(`Restored: ${restored.join(', ')}`);
+    } catch(err){
+      showToast('Could not read that file.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('about-btn').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.remove('hidden');
+});
+document.getElementById('close-about').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.add('hidden');
+});
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
